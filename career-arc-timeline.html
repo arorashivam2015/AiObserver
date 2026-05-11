@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About — Shivam Arora</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0c14;
+    --surface: #1e1929;
+    --purple-bright: #a78bfa;
+    --purple-dim: #3b2d5c;
+    --purple-glow: rgba(167,139,250,0.15);
+    --text-primary: #f0ecf8;
+    --text-secondary: #9b8db8;
+    --text-muted: #5a4f72;
+    --line-color: #2a2040;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'Instrument Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: radial-gradient(circle, rgba(167,139,250,0.07) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    position: relative; z-index: 1;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 64px 32px 100px;
+  }
+
+  .header { margin-bottom: 40px; }
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--purple-bright);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .eyebrow::before { content: ''; display: inline-block; width: 24px; height: 1px; background: var(--purple-bright); }
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(34px, 6vw, 50px);
+    font-weight: 400;
+    line-height: 1.1;
+    margin-bottom: 14px;
+  }
+  h1 em { font-style: italic; color: var(--purple-bright); }
+  .subhead { font-size: 15px; color: var(--text-secondary); line-height: 1.7; max-width: 420px; }
+
+  /* STATS / TAB ROW */
+  .stats-row {
+    display: flex;
+    border: 1px solid var(--line-color);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 36px;
+  }
+  .stat {
+    flex: 1;
+    padding: 20px 16px;
+    border-right: 1px solid var(--line-color);
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    position: relative;
+    user-select: none;
+  }
+  .stat:last-child { border-right: none; }
+  .stat:hover { background: rgba(167,139,250,0.06); }
+  .stat.active { background: rgba(167,139,250,0.1); }
+  .stat.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 16px; right: 16px;
+    height: 2px;
+    background: var(--purple-bright);
+    border-radius: 2px 2px 0 0;
+  }
+  .stat-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--text-secondary);
+    line-height: 1;
+    margin-bottom: 5px;
+    transition: color 0.2s;
+  }
+  .stat.active .stat-num { color: var(--purple-bright); }
+  .stat-lbl {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .stat.active .stat-lbl { color: var(--purple-bright); }
+
+  /* HINT */
+  .hint {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hint::before { content: '↓'; color: var(--purple-bright); font-size: 14px; }
+
+  /* PANEL */
+  .panel { display: none; }
+  .panel.visible { display: block; }
+
+  /* TIMELINE */
+  .timeline { position: relative; padding-left: 40px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 11px; top: 8px; bottom: 8px;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, var(--line-color) 8%, var(--line-color) 92%, transparent);
+  }
+
+  /* ITEM */
+  .item {
+    position: relative;
+    margin-bottom: 8px;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  .item::before {
+    content: '';
+    position: absolute;
+    left: -35px; top: 18px;
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--text-muted);
+    transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+    z-index: 2;
+  }
+  .item.current::before {
+    background: var(--purple-bright);
+    border-color: var(--purple-bright);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(167,139,250,0.5); }
+    50%      { box-shadow: 0 0 0 8px rgba(167,139,250,0); }
+  }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line-color);
+    border-radius: 12px;
+    padding: 18px 20px;
+    transition: border-color 0.25s, background 0.25s;
+  }
+  .card-top {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 12px;
+  }
+  .role { font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1.3; margin-bottom: 3px; }
+  .org  { font-family: 'DM Mono', monospace; font-size: 11.5px; color: var(--purple-bright); letter-spacing: 0.04em; }
+  .year-badge { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; padding-top: 2px; flex-shrink: 0; }
+
+  /* EXPAND */
+  .expand {
+    overflow: hidden;
+    max-height: 0; opacity: 0;
+    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, margin-top 0.3s;
+  }
+  .divider { height: 1px; background: var(--line-color); margin-bottom: 10px; }
+  .achievement { display: flex; gap: 10px; align-items: flex-start; }
+  .ach-icon  { font-size: 16px; flex-shrink: 0; line-height: 1.4; }
+  .ach-text  { font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
+  .ach-text strong { color: var(--text-primary); font-weight: 500; }
+
+  /* TAGS */
+  .tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 7px;
+    letter-spacing: 0.04em;
+  }
+  .tag-edu { background: rgba(96,165,250,0.12);  color: #93c5fd; }
+  .tag-fin { background: rgba(52,211,153,0.12);  color: #6ee7b7; }
+  .tag-ml  { background: rgba(167,139,250,0.14); color: var(--purple-bright); }
+  .tag-ai  { background: rgba(251,191,36,0.12);  color: #fcd34d; }
+  .tag-win { background: rgba(251,191,36,0.14);  color: #fbbf24; }
+  .tag-pub { background: rgba(96,165,250,0.12);  color: #93c5fd; }
+
+  @media (max-width: 520px) {
+    .page { padding: 40px 20px 80px; }
+    .stat-num { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <div class="eyebrow">About me</div>
+    <h1>A decade of<br><em>building with data</em></h1>
+    <p class="subhead">From cracking algorithms at IIT to shipping GenAI products at scale — here's the story.</p>
+  </header>
+
+  <div class="stats-row">
+    <div class="stat active" onclick="switchTab('experience', this)">
+      <div class="stat-num">10<span style="font-size:16px">yr</span></div>
+      <div class="stat-lbl">Experience</div>
+    </div>
+    <div class="stat" onclick="switchTab('patents', this)">
+      <div class="stat-num">6</div>
+      <div class="stat-lbl">Patents</div>
+    </div>
+    <div class="stat" onclick="switchTab('hackathons', this)">
+      <div class="stat-num">8</div>
+      <div class="stat-lbl">Competitions</div>
+    </div>
+  </div>
+
+  <p class="hint" id="hint">Hover any role to reveal a career milestone</p>
+
+  <!-- EXPERIENCE -->
+  <div class="panel visible" id="panel-experience">
+    <div class="timeline">
+      <div class="item current">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">Director Data Scientist</div><div class="org">Mastercard AI Garage</div></div>
+            <div class="year-badge">2022 – now</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">⚡</span>
+              <div class="ach-text">
+                <ul style="list-style:none;padding:0;margin:0 0 8px;display:flex;flex-direction:column;gap:6px;">
+                  <li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--purple-bright);margin-top:2px;flex-shrink:0;">▸</span><span><strong>Know Your Transaction</strong> — GenAI product that explains complex data insights and model decisions in natural language, with input/output guardrails for safety.</span></li>
+                  <li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--purple-bright);margin-top:2px;flex-shrink:0;">▸</span><span><strong>LLM Security Suite</strong> — comprehensive suite to assess LLM vulnerabilities via adversarial prompts, with mitigation recommendations.</span></li>
+                  <li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--purple-bright);margin-top:2px;flex-shrink:0;">▸</span><span><strong>Agentic Commerce</strong> — built an agentic shopping experience from scratch with multilingual and voice-based features.</span></li>
+                  <li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--purple-bright);margin-top:2px;flex-shrink:0;">▸</span><span><strong>Dynamic Decisioning Service</strong> — AI approval engine mirroring issuer-specific transaction behaviour using Graph Neural Networks for smarter stand-in decisions.</span></li>
+                  <li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--purple-bright);margin-top:2px;flex-shrink:0;">▸</span><span><strong>Dispute &amp; Chargeback Reduction</strong> — predictive models using Boosting and GNN to proactively minimise transaction disputes and chargebacks.</span></li>
+                </ul>
+                <div><span class="tag tag-ai">GenAI · LLM Security · Agentic · GNN</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">Senior Data Scientist</div><div class="org">Aera Technology</div></div>
+            <div class="year-badge">2020 – 22</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">🤖</span>
+              <div class="ach-text">
+                <ul style="list-style:none;padding:0;margin:0 0 8px;display:flex;flex-direction:column;gap:6px;">
+                  <li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--purple-bright);margin-top:2px;flex-shrink:0;">▸</span><span><strong>Smart Skill</strong> — self-learning supply chain recommendations using contextual bandit algorithms (ε-greedy, UCB, Thompson Sampling) with off-policy evaluation via inverse propensity scoring.</span></li>
+                  <li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--purple-bright);margin-top:2px;flex-shrink:0;">▸</span><span><strong>Demand Forecast</strong> — ensembled time-series models (Croston, Exponential Smoothing, THETA, ARMA) for a chemical industry client using ABC-XYZ segmentation for touchless forecasting.</span></li>
+                  <li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--purple-bright);margin-top:2px;flex-shrink:0;">▸</span><span><strong>Inventory Forecast</strong> — on-hand inventory prediction for a pharma client using Random Forest &amp; XGBoost across 4/8/12-week horizons, with SHAP for explainability.</span></li>
+                </ul>
+                <div><span class="tag tag-ml">RL · Supply Chain · Forecasting</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">Analytics Manager</div><div class="org">Piramal Financial Services</div></div>
+            <div class="year-badge">2018 – 20</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">💳</span>
+              <div class="ach-text">
+                <ul style="list-style:none;padding:0;margin:0 0 8px;display:flex;flex-direction:column;gap:6px;">
+                  <li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--purple-bright);margin-top:2px;flex-shrink:0;">▸</span><span><strong>Account Monitoring</strong> — deployed delinquency prediction model for existing customers using Random Forest with ADASYN oversampling, monitored via PSI and GINI stability.</span></li>
+                  <li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--purple-bright);margin-top:2px;flex-shrink:0;">▸</span><span><strong>Risk Analytics</strong> — built underwriting models and reject inferencing framework with Experian; developed PowerBI dashboards for senior management risk and collections reporting.</span></li>
+                  <li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:var(--purple-bright);margin-top:2px;flex-shrink:0;">▸</span><span><strong>Customer Journey Analytics</strong> — ran in-house SEM campaigns on Google, Facebook &amp; Bing; used K-means on bureau data to segment leads by risk profile and loan propensity.</span></li>
+                </ul>
+                <div><span class="tag tag-fin">FinTech · Risk · Marketing</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">PGDBA — Data Science</div><div class="org">IIM Calcutta · IIT Kharagpur · ISI Kolkata</div></div>
+            <div class="year-badge">2016 – 18</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">🏛</span>
+              <div class="ach-text">Completed India's only <strong>triple-institute Data Science postgrad</strong> with a GPA of <strong>8.51/10</strong> — a rigorous programme spanning business strategy at IIM-C, engineering sciences at IIT-KGP, and statistical theory at ISI.<div><span class="tag tag-edu">Postgrad</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">Business Consultant</div><div class="org">Fractal Analytics</div></div>
+            <div class="year-badge">2015 – 16</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">📊</span>
+              <div class="ach-text">Tracked pricing &amp; promotions for <strong>66 brands, 200+ products</strong> at a Fortune 100 CPG firm. Formulated proposals that <strong>added $6M revenue</strong> through analytical solutions for two insurance clients.<div><span class="tag tag-fin">Analytics · CPG · Insurance</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">B.Tech (Honours)</div><div class="org">IIT (BHU), Varanasi</div></div>
+            <div class="year-badge">2011 – 15</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">🎓</span>
+              <div class="ach-text">Graduated with <strong>GPA 8.09/10</strong> and organised events as Event Manager of the Entrepreneurship Cell — building the foundations in mathematics, algorithms, and systems thinking that everything since has been built on.<div><span class="tag tag-edu">Foundation</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PATENTS -->
+  <div class="panel" id="panel-patents">
+    <div class="timeline">
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">Jailbreaking LLMs by Inverting Intent of Query</div><div class="org">Mastercard · P14273-US-UTIL</div></div>
+            <div class="year-badge">US Patent</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">🔓</span>
+              <div class="ach-text">A novel adversarial technique for surfacing LLM vulnerabilities by semantically inverting the intent of a query — the core of the LLM Security Suite built at Mastercard AI Garage.<div><span class="tag tag-ai">LLM Security · Adversarial AI</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">Methods and Systems for Prompts Related to Financial Events</div><div class="org">Mastercard · P12849-US-UTIL</div></div>
+            <div class="year-badge">US Patent</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">💬</span>
+              <div class="ach-text">Structured prompting systems that generate natural language explanations of complex financial events — core to the Know Your Transaction GenAI product.<div><span class="tag tag-ai">GenAI · FinTech · Explainability</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">Intelligent Payment Management to Mitigate Over-Credit-Limit Risks</div><div class="org">Mastercard · P13984-IN-UTIL</div></div>
+            <div class="year-badge">IN Patent</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">💳</span>
+              <div class="ach-text">AI-driven decisioning for transactions approaching credit limits — part of the Dynamic Decisioning Service leveraging Graph Neural Networks.<div><span class="tag tag-fin">GNN · Payments · Risk</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">AI Methods and Systems for Resolving Chargeback Disputes</div><div class="org">Mastercard · P12514-IN-UTIL</div></div>
+            <div class="year-badge">IN Patent</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">⚖️</span>
+              <div class="ach-text">Predictive models using boosting and GNN to proactively identify and resolve dispute scenarios before they escalate to full chargebacks.<div><span class="tag tag-fin">GNN · Dispute Resolution</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">Methods for Assigning Chargeback Liability to an Entity</div><div class="org">Mastercard · P12130-IN-UTIL</div></div>
+            <div class="year-badge">IN Patent</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">🔍</span>
+              <div class="ach-text">Intelligently attributes chargeback liability across the payment chain — issuers, merchants, and acquirers — using AI-based behavioural pattern analysis.<div><span class="tag tag-fin">Payments · Liability Attribution</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">Systems for Leveraging Data Aggregation to Define Actionable Insights</div><div class="org">Mastercard · VAN14772-IN-PROV</div></div>
+            <div class="year-badge">IN Provisional</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">📡</span>
+              <div class="ach-text">Framework aggregating multi-source data signals to surface actionable insights — enabling smarter stand-in decisioning during issuer unavailability.<div><span class="tag tag-ml">Data Aggregation · Decisioning</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">FgenXAI: A GenAI Framework for Explainable Financial Records</div><div class="org">KDD Workshop · Publication</div></div>
+            <div class="year-badge">Paper</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">📄</span>
+              <div class="ach-text">Published at KDD — presents a generative AI framework for producing human-readable explanations of financial records, bridging model transparency and regulatory compliance.<div><span class="tag tag-pub">KDD · XAI · FinTech</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HACKATHONS -->
+  <div class="panel" id="panel-hackathons">
+    <div class="timeline">
+      <div class="item current">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">LLMs: You Can't Please Them All</div><div class="org">Kaggle</div></div>
+            <div class="year-badge">2025 · 🥇 Gold</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">🥇</span>
+              <div class="ach-text">Gold medal on a competition focused on aligning LLM outputs to diverse, conflicting human preferences — directly tied to production GenAI safety work.<div><span class="tag tag-win">Kaggle Gold · LLM Alignment</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">Jigsaw: Agile Community Rules Classification</div><div class="org">Kaggle</div></div>
+            <div class="year-badge">2025 · 🥈 Silver</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">🥈</span>
+              <div class="ach-text">Silver medal classifying community content against evolving policy rules — a real-world challenge of keeping AI moderation adaptive and fair.<div><span class="tag tag-ai">NLP · Content Moderation</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">Competition for LLM and Agent Safety</div><div class="org">NeurIPS</div></div>
+            <div class="year-badge">2024 · 🏆 Rank 2</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">🏆</span>
+              <div class="ach-text"><strong>Global Rank 2</strong> at NeurIPS 2024's flagship safety competition — evaluated on robustness against adversarial prompts, jailbreaks, and unsafe instruction-following.<div><span class="tag tag-win">NeurIPS · LLM Safety · Global #2</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">Fraud Model Optimization</div><div class="org">Mastercard Internal Hackathon</div></div>
+            <div class="year-badge">2023 · Rank 3</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">🔐</span>
+              <div class="ach-text">Placed 3rd in Mastercard's internal competition on fraud detection optimisation — applied GNN and boosting approaches to transaction graph analysis.<div><span class="tag tag-fin">Fraud Detection · GNN</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">Smart India Hackathon</div><div class="org">Govt. of India — MHRD</div></div>
+            <div class="year-badge">2017 · 🥈 Silver</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">🇮🇳</span>
+              <div class="ach-text">National-level hackathon by India's Ministry of Human Resource Development — silver medal building a data-driven civic solution.<div><span class="tag tag-edu">Civic Tech · National</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">The Analytics Challenge</div><div class="org">NASSCOM</div></div>
+            <div class="year-badge">2016 · Rank 3 / 143</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">📈</span>
+              <div class="ach-text">3rd out of 143 competing teams in NASSCOM's industry analytics challenge — one of the first signals that data science was the right path.<div><span class="tag tag-ml">Analytics · NASSCOM</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">Indian Case Challenge</div><div class="org">IIT Kharagpur</div></div>
+            <div class="year-badge">2014 · Top 10 / 600+</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">🎯</span>
+              <div class="ach-text">Top 10 out of 600+ teams — the competition that first sparked the journey toward data science and analytical problem-solving.<div><span class="tag tag-edu">Case Competition · IIT KGP</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card">
+          <div class="card-top">
+            <div><div class="role">EXL Case Quotient</div><div class="org">EXL Analytics</div></div>
+            <div class="year-badge">2014 · Top 30 / 735</div>
+          </div>
+          <div class="expand"><div class="divider"></div>
+            <div class="achievement"><span class="ach-icon">🧮</span>
+              <div class="ach-text">Top 30 out of 735 teams in EXL's analytics case competition — an early validation of structured analytical thinking under pressure.<div><span class="tag tag-edu">Analytics · EXL</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+  const hints = {
+    experience:  'Hover any role to reveal a career milestone',
+    patents:     'Hover any patent to see what it covers',
+    hackathons:  'Hover any competition to see the context'
+  };
+
+  function switchTab(tab, el) {
+    document.querySelectorAll('.stat').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('visible'));
+    const panel = document.getElementById('panel-' + tab);
+    panel.classList.add('visible');
+    document.getElementById('hint').textContent = hints[tab];
+    animateItems(panel);
+  }
+
+  function animateItems(panel) {
+    panel.querySelectorAll('.item').forEach((item, i) => {
+      item.style.transition = 'none';
+      item.style.opacity = '0';
+      item.style.transform = 'translateY(14px)';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        item.style.transition = `opacity 0.4s ease ${i * 0.06}s, transform 0.4s ease ${i * 0.06}s`;
+        item.style.opacity = '1';
+        item.style.transform = 'translateY(0)';
+      }));
+    });
+  }
+
+  // hover + pin per panel
+  document.querySelectorAll('.panel').forEach(panel => {
+    panel.querySelectorAll('.item').forEach(item => {
+      item.addEventListener('mouseenter', () => {
+        item.querySelector('.card').style.borderColor = 'var(--purple-dim)';
+        item.querySelector('.card').style.background = '#201930';
+        const dot = item;
+        dot.style.setProperty('--dot-border', 'var(--purple-bright)');
+        const exp = item.querySelector('.expand');
+        exp.style.maxHeight = '320px';
+        exp.style.opacity = '1';
+        exp.style.marginTop = '12px';
+        item.querySelector('::before');
+      });
+      item.addEventListener('mouseleave', () => {
+        if (item.classList.contains('pinned')) return;
+        item.querySelector('.card').style.borderColor = '';
+        item.querySelector('.card').style.background = '';
+        const exp = item.querySelector('.expand');
+        exp.style.maxHeight = '0';
+        exp.style.opacity = '0';
+        exp.style.marginTop = '0';
+      });
+      item.addEventListener('click', () => {
+        const pinned = item.classList.contains('pinned');
+        panel.querySelectorAll('.item').forEach(i => {
+          i.classList.remove('pinned');
+          if (!i.matches(':hover')) {
+            i.querySelector('.card').style.borderColor = '';
+            i.querySelector('.card').style.background = '';
+            const exp = i.querySelector('.expand');
+            exp.style.maxHeight = '0';
+            exp.style.opacity = '0';
+            exp.style.marginTop = '0';
+          }
+        });
+        if (!pinned) {
+          item.classList.add('pinned');
+          item.querySelector('.card').style.borderColor = 'var(--purple-dim)';
+          item.querySelector('.card').style.background = '#201930';
+          const exp = item.querySelector('.expand');
+          exp.style.maxHeight = '320px';
+          exp.style.opacity = '1';
+          exp.style.marginTop = '12px';
+        }
+      });
+    });
+  });
+
+  // initial animate
+  animateItems(document.getElementById('panel-experience'));
+</script>
+</body>
+</html>
